@@ -12,6 +12,7 @@ import { Link as RouterLink, LinkProps as RouterLinkProps } from 'react-router-d
 import { AuthTokenContext } from '../../hooks/auth-token';
 import { DispatchContext } from '../../hooks/dispatch';
 import reducer from '../../state/reducer';
+import useSession from '../../hooks/session';
 
 const drawerWidth: number = 240;
 
@@ -78,6 +79,7 @@ const SigninScreen = React.lazy(() => import('../../screens/Signin'));
 
 function App() {
     const theme = createTheme({
+        palette: { mode: 'dark' },
         components: {
             MuiButtonBase: {
                 defaultProps: {
@@ -86,8 +88,9 @@ function App() {
             },
         },
     });
+    const session = useSession();
     const [{ drawerOpen, token }, dispatch] = useReducer(reducer, undefined, () => {
-        const token = typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem('auth-token') || undefined : undefined;
+        const { token } = session;
         return { token, drawerOpen: false };
     });
     const toggleDrawer = useCallback(() => {
@@ -110,10 +113,9 @@ function App() {
             </DispatchContext.Provider>
         );
     }
-    console.log(`App::render()`, { drawerOpen, token });
     return (
         <DispatchContext.Provider value={dispatch}>
-        <AuthTokenContext.Provider value={undefined}>
+        <AuthTokenContext.Provider value={token}>
             <ThemeProvider theme={theme}>
             <Box sx={{ display: 'flex' }}>
                 <CssBaseline />
