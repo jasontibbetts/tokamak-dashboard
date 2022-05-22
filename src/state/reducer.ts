@@ -4,34 +4,32 @@ export interface SigninAction {
     data: string
 }
 
-export interface ToggleDrawerAction {
-    type: 'toggle-drawer'
-    data?: boolean
-}
-
 export interface SignoutAction {
     type: 'signout'
     data: undefined
 }
 
-export type ApplicationAction = SigninAction | SignoutAction | ToggleDrawerAction;
+export interface TokenExpired {
+    type: 'token-expired'
+    data: undefined
+}
+
+export interface CreateApplication {
+    type: 'create-application'
+    data: undefined
+}
+
+export type ApplicationAction = SigninAction | SignoutAction | TokenExpired | CreateApplication;
 
 export interface ApplicationState {
-    token?: any
-    drawerOpen?: boolean
+    token?: string
+    error?: Error
+    username?: string
 }
 
 export default function reducer(state: ApplicationState, action: ApplicationAction): ApplicationState {
     const { type } = action;
-    console.log(`App::reducer()`, action);
     switch(type) {
-        case 'toggle-drawer': {
-            const { data } = action;
-            return {
-                ...state,
-                drawerOpen: data === undefined ? !state.drawerOpen : data
-            };
-        }
         case 'signin': {
             const { data } = action;
             return {
@@ -42,6 +40,11 @@ export default function reducer(state: ApplicationState, action: ApplicationActi
         case 'signout': return {
             ...state,
             token: undefined
+        };
+        case 'token-expired': return {
+            ...state,
+            token: undefined,
+            error: new Error('Session Expired')
         };
         default: return state;
     }
