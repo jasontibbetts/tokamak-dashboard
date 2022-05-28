@@ -6,7 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAPIFetch } from "../../hooks/api";
 
-interface ApplicationRecord { 
+interface ApplicationRecord {
     id: string
     name: string
     type: string
@@ -85,17 +85,17 @@ function ApplicationCard({ application }: { application: ApplicationRecord }): J
 }
 
 export default function ApplicationsScreen() {
-    const applications = useAPIFetch<ApplicationRecord[]>('/applications');
+    const [applications] = useAPIFetch<ApplicationRecord[]>('/applications');
     return (
-        <Box sx={{ display: 'flex', flex: '1 1 100%', flexFlow: 'column nowrap', minHeight: '33vh', maxHeight: '100vh', padding: '1em'}}>
+        <Box sx={{ display: 'flex', flex: '1 1 100%', flexFlow: 'column nowrap', minHeight: '33vh', maxHeight: '100vh', padding: '1em' }}>
             {applications instanceof Error && <Alert severity="error">{applications.message}</Alert>}
-            {!applications && <LinearProgress/>}
+            {!applications && <LinearProgress />}
             {applications && !(applications instanceof Error) &&
                 <Grid container spacing={2}>
-                    {applications.map(application => <ApplicationCard application={application} key={application.id}/>)}
+                    {applications.map(application => <ApplicationCard application={application} key={application.id} />)}
                 </Grid>
             }
-            <Fab color="primary" component={RouterLink} to={'/create/application'}><AddIcon arial-label={'add application'}/></Fab>
+            <Fab color="primary" component={RouterLink} to={'/create/application'}><AddIcon arial-label={'add application'} /></Fab>
         </Box>
     );
 }

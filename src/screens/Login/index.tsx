@@ -1,8 +1,8 @@
 import { Alert, Avatar, Box, Button, Checkbox, Container, FormControlLabel, LinearProgress, Paper, TextField, Typography } from "@mui/material";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import React, { useCallback, useContext, useState } from "react";
+import React, { useCallback, useState } from "react";
 import useDispatch from "../../hooks/dispatch";
-import { SessionContext } from "../../hooks/session";
+import useSession from "../../hooks/session";
 
 interface SigninState { 
     pending: boolean
@@ -12,10 +12,9 @@ interface SigninState {
     remember: boolean 
 }
 
-export default function LoginScreen({ error: iniitalError }: { error?: Error }) {
-    const session = useContext(SessionContext);
-    const { username: sessionUserName = '' } = session.getState();
-    const [{ username, password, remember, pending, error }, setState] = useState<SigninState>({ pending: false, error: iniitalError, username: sessionUserName, password: '', remember: !!sessionUserName });
+export default function LoginScreen({ error: initialError }: { error?: Error }) {
+    const [{ username: sessionUserName = '' }, setSession] = useSession();
+    const [{ username, password, remember, pending, error }, setState] = useState<SigninState>({ pending: false, error: initialError, username: sessionUserName, password: '', remember: !!sessionUserName });
     const dispatch = useDispatch();
     const handleChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         const name = event.target.name;
@@ -37,7 +36,7 @@ export default function LoginScreen({ error: iniitalError }: { error?: Error }) 
             }).then((resp) => {
                 if (resp.ok) {
                     resp.json().then(({ token }) => {
-                        session.setState({ token, username, remember });
+                        setSession({ token, username, remember });
                         setState((current) => ({ ...current, pending: false, error: undefined }));
                         dispatch({ type: 'signin', data: token });
                     }).catch(error => {
@@ -50,7 +49,7 @@ export default function LoginScreen({ error: iniitalError }: { error?: Error }) 
                 setState((current) => ({ ...current, pending: false, error }));
             });
         }
-    }, [dispatch, pending, session, username, password, remember]);
+    }, [dispatch, pending, username, password, remember, setSession]);
     return (
         <Paper sx={{ height: '100vh', display: 'flex', flexFlow: 'row nowrap', alignItems: 'center', justifyContent: 'center' }} square>
             <Container component="main" maxWidth="xs">                

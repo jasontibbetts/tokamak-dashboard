@@ -1,24 +1,25 @@
 import React, { Suspense, useCallback, useRef, useState } from 'react';
 import { styled } from '@mui/material/styles';
-import { Avatar, Box, CssBaseline, Divider, Drawer as MuiDrawer, IconButton, LinearProgress, ListItemButton, ListItemIcon, ListItemText, Menu, MenuItem, Toolbar, Typography } from '@mui/material';
+import { Box, CssBaseline, Divider, Drawer as MuiDrawer, Grid, LinearProgress, ListItemButton, ListItemIcon, ListItemText, Menu, MenuItem, ListItemButtonProps } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ApplicationsIcon from '@mui/icons-material/Apps';
-import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
+// import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 import List from '@mui/material/List';
 import { Link as RouterLink } from 'react-router-dom';
 import Logout from '@mui/icons-material/Logout';
 import useSession from '../../hooks/session';
 import useDispatch from '../../hooks/dispatch';
-import { AppTitleRoutes } from '../AppRoutes';
-import PersonIcon from '@mui/icons-material/Person';
+import AccountIcon from '@mui/icons-material/AccountBox';
+import PeopleIcon from '@mui/icons-material/People';
 
 const drawerWidth: number = 240;
+
+/*
 interface AppBarProps extends MuiAppBarProps {    
     open?: boolean;
 }
-
 const AppBar = styled(MuiAppBar, {
     shouldForwardProp: (prop) => prop !== 'open',
   })<AppBarProps>(({ theme, open }) => ({
@@ -36,6 +37,7 @@ const AppBar = styled(MuiAppBar, {
       }),
     }),
 }));
+*/
 
 const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
     ({ theme, open }) => ({
@@ -63,11 +65,21 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
     }),
 );
 
-export default function Layout({ children }: { children?: React.ReactChild }): JSX.Element {
+export interface LayoutState {
+    drawerOpen?: boolean
+    userMenuOpen?: boolean
+}
+
+export interface LayoutProps extends LayoutState {
+    children?: React.ReactChild
+    initialState?: LayoutState
+}
+
+export default function Layout({ children, initialState = {}}: LayoutProps): JSX.Element {
     const dispatch = useDispatch();
     const [{ username }, setSession] = useSession();
-    const [{ drawerOpen, userMenuOpen }, setState] = useState({ drawerOpen: false, userMenuOpen: false });
-    const anchorRef = useRef<any>();
+    const [{ drawerOpen, userMenuOpen }, setState] = useState({ drawerOpen: false, userMenuOpen: false, ...initialState});
+    const anchorRef = useRef<Element | undefined>();
     const toggleDrawer = useCallback(() => {
         setState(current => ({ ...current, drawerOpen: !current.drawerOpen}));
     }, []);
@@ -88,86 +100,62 @@ export default function Layout({ children }: { children?: React.ReactChild }): J
     return (
         <Box sx={{ display: 'flex', WebkitFontSmoothing: 'antialiased' }}>
             <CssBaseline />
-            <AppBar position="absolute" open={drawerOpen}>
-                <Toolbar
-                    sx={{
-                        pr: '24px', // keep right padding when drawer is closed
-                    }}
-                >
-                    <IconButton
-                        edge="start"
-                        color="inherit"
-                        aria-label="open drawer"
-                        onClick={toggleDrawer}
-                        sx={{
-                            marginRight: '36px',
-                            ...(drawerOpen && { display: 'none' }),
-                        }}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Typography
-                        component="h1"
-                        variant="h6"
-                        color="inherit"
-                        noWrap
-                        sx={{ flexGrow: 1 }}
-                    >
-                        <AppTitleRoutes/>
-                    </Typography>                        
-                    <IconButton onClick={handleAvatarClick} ref={anchorRef} id='user-avatar'>
-                        <Avatar variant="square"/>
-                    </IconButton>                        
-                    <Menu anchorEl={anchorRef.current} open={userMenuOpen} MenuListProps={{'aria-labelledby': 'basic-button'}} onClose={onUserMenuClose}>
-                        <MenuItem disabled={true}>
-                            <ListItemIcon>
-                                <Avatar variant="square" sx={{ width: 24, height: 24 }}/>
-                            </ListItemIcon>
-                            {username}
-                        </MenuItem>
-                        <Divider/>
-                        <MenuItem onClick={handleLogoutClick}>
-                            <ListItemIcon><Logout fontSize='small'/></ListItemIcon>
-                            Logout
-                        </MenuItem>
-                    </Menu>
-                </Toolbar>
-            </AppBar>
-            <Drawer variant="permanent" open={drawerOpen}>
-                <Toolbar
-                    sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'flex-end',
-                    px: [1],
-                    }}
-                >
-                    <IconButton onClick={toggleDrawer}>
-                    <ChevronLeftIcon />
-                    </IconButton>
-                </Toolbar>
-                <Divider />
-                <List component="nav">
-                    <ListItemButton component={RouterLink} to="/" sx={{ color: 'color.primary'}}>
-                        <ListItemIcon>
-                            <DashboardIcon />
-                        </ListItemIcon>
-                        <ListItemText primary="Dashboard" />
-                    </ListItemButton>
-                    <ListItemButton component={RouterLink} to="/applications">
-                        <ListItemIcon>
-                            <ApplicationsIcon />
-                        </ListItemIcon>
-                        <ListItemText primary="Applications" />
-                    </ListItemButton>
-                    <ListItemButton component={RouterLink} to="/users">
-                        <ListItemIcon>
-                            <PersonIcon />
-                        </ListItemIcon>
-                        <ListItemText primary="Users" />
-                    </ListItemButton>
-                    <Divider sx={{ my: 1 }} />                
-                </List>
+            <Drawer variant="permanent" open={drawerOpen}>            
+                <Grid container direction="column" flexGrow="1" justifyContent="space-between" overflow="hidden">
+                    <Grid item>
+                        <List component="nav">
+                            <ListItemButton onClick={toggleDrawer}>
+                                <ListItemIcon>
+                                { drawerOpen && <ChevronLeftIcon /> }
+                                { !drawerOpen && <MenuIcon /> }
+                                </ListItemIcon>
+                            </ListItemButton>
+                            <Divider /> 
+                            <ListItemButton component={RouterLink} to="/" sx={{ color: 'color.primary'}}>
+                                <ListItemIcon>
+                                    <DashboardIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Dashboard" />
+                            </ListItemButton>
+                            <ListItemButton component={RouterLink} to="/applications">
+                                <ListItemIcon>
+                                    <ApplicationsIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Applications" />
+                            </ListItemButton>
+                            <ListItemButton component={RouterLink} to="/users">
+                                <ListItemIcon>
+                                    <PeopleIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Users" />
+                            </ListItemButton>                                   
+                        </List>
+                    </Grid> 
+                    <Grid item>
+                        <Divider />                        
+                        <List component="nav">
+                            <ListItemButton onClick={handleAvatarClick} ref={anchorRef as ListItemButtonProps['ref']} id='user-avatar'>
+                                <ListItemIcon>
+                                    <AccountIcon />
+                                </ListItemIcon>
+                                <ListItemText primary={username} />
+                            </ListItemButton>
+                            <Menu anchorEl={anchorRef.current} open={!!userMenuOpen} MenuListProps={{'aria-labelledby': 'basic-button'}} onClose={onUserMenuClose}>
+                                <MenuItem disabled component={RouterLink} to="/profile">
+                                    <ListItemIcon>
+                                        <AccountIcon />
+                                    </ListItemIcon>
+                                    <ListItemText primary="Profile" />
+                                </MenuItem>
+                                <Divider/>
+                                <MenuItem onClick={handleLogoutClick}>
+                                    <ListItemIcon><Logout fontSize='small'/></ListItemIcon>
+                                    Logout
+                                </MenuItem>
+                        </Menu>
+                        </List>                       
+                    </Grid>
+                </Grid>
             </Drawer>
             <Box
                 component="main"
@@ -185,7 +173,6 @@ export default function Layout({ children }: { children?: React.ReactChild }): J
                 }}
             >                    
                 <Suspense fallback={<LinearProgress />}>
-                    <Toolbar />
                     {children}
                 </Suspense>
             </Box>

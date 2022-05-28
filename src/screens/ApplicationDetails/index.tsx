@@ -15,10 +15,10 @@ interface ApplicationRecord {
 }
 
 export default function ApplicationDetailsScreen(): JSX.Element {
-    const { id } = useParams();
-    const application = useAPIFetch<ApplicationRecord>(`/applications/${id}`);
+    const { id = '' } = useParams();
+    const [application,] = useAPIFetch<ApplicationRecord>(`/applications/${id}`);
     const token = useAuthToken();
-    const [state, setState] = useState<{ application?: ApplicationRecord | Error, loading?: boolean }>({ application, loading: application === undefined });    
+    const [state, setState] = useState<{ application?: ApplicationRecord | Error, loading?: boolean }>({ application, loading: application === undefined });
     const handleSubmit = useCallback((event: FormEvent) => {
         event.preventDefault();
         const data = JSON.stringify(state.application);
@@ -62,7 +62,7 @@ export default function ApplicationDetailsScreen(): JSX.Element {
     useEffect(() => {
         if (application && !(application instanceof Error)) {
             setState({ application, loading: false });
-        }        
+        }
     }, [application]);
     const created = state.application && !(state.application instanceof Error) ? new Date(state.application.createdAt) : undefined;
     const updated = state.application && !(state.application instanceof Error) && state.application.updatedAt ? new Date(state.application.updatedAt) : undefined;
@@ -70,17 +70,17 @@ export default function ApplicationDetailsScreen(): JSX.Element {
         <Box sx={{ padding: '0.5em' }}>
             <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
                 <>
-                {state.loading && <LinearProgress/>}
-                {state.application && !(state.application instanceof Error) && 
-                    <>                        
-                        <Paper variant={'outlined'} sx={{ padding: '0.5em'}}>
-                            <TextField value={state.application.name} label={'Application Name'} required onChange={handleInputChange} name={'name'} margin={'normal'} />
-                            {created && <Typography>Created at <time dateTime={created.toISOString()}>{created.toLocaleDateString()} {created.toLocaleTimeString()}</time> by {state.application.createdBy}</Typography>}
-                            {updated && <Typography>Updated at <time dateTime={updated.toISOString()}>{updated.toLocaleDateString()} {updated.toLocaleTimeString()}</time> by {state.application.updatedBy}</Typography>}
-                        </Paper>
-                        <Button type="submit" disabled={application === state.application || state.loading}>save</Button>
-                    </> 
-                }
+                    {state.loading && <LinearProgress />}
+                    {state.application && !(state.application instanceof Error) &&
+                        <>
+                            <Paper variant={'outlined'} sx={{ padding: '0.5em' }}>
+                                <TextField value={state.application.name} label={'Application Name'} required onChange={handleInputChange} name={'name'} margin={'normal'} />
+                                {created && <Typography>Created at <time dateTime={created.toISOString()}>{created.toLocaleDateString()} {created.toLocaleTimeString()}</time> by {state.application.createdBy}</Typography>}
+                                {updated && <Typography>Updated at <time dateTime={updated.toISOString()}>{updated.toLocaleDateString()} {updated.toLocaleTimeString()}</time> by {state.application.updatedBy}</Typography>}
+                            </Paper>
+                            <Button type="submit" disabled={application === state.application || state.loading}>save</Button>
+                        </>
+                    }
                 </>
             </Box>
         </Box>

@@ -1,4 +1,4 @@
-import { useSyncExternalStore, createContext, useContext } from 'react';
+import { useSyncExternalStore } from 'react';
 
 export interface Session {
     subscribe(listener: (() => void)): (() => void)
@@ -75,10 +75,10 @@ interface SessionData {
     remember?: boolean
 }
 
-export const SessionContext = createContext<Session>(createSession());
+// export const SessionContext = createContext<Session>(createSession());
+const session = createSession();
 
 export default function useSession(): [SessionData, ((next: SessionData | ((current: SessionData) => SessionData)) => void)] {
-    const session = useContext(SessionContext);
     return [
         useSyncExternalStore(session.subscribe, session.getState),
         session.setState

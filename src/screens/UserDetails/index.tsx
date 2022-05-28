@@ -1,116 +1,70 @@
-import { Alert, Button, FormControl, Grid, InputLabel, LinearProgress, MenuItem, Select, TextField } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useAPIFetch, useAPIObjectState } from "../../hooks/api";
-type UserReference = {
-    rel: 'User'
-    ref: string
-    href: string
-    username: string
-}
-type GroupReference = {
-    rel: 'Group',
-    ref: string
-    //href: string
-}
-type UserRecord = {
-    id: string
-    modelType: 'User'
-    username: string
-    group: GroupReference
-    createdAt: number
-    updatedAt?: number
-    createdBy: Omit<UserReference, 'username'>
-    updatedBy?: Omit<UserReference, 'username'>
-    password?: string
-}
+import { Alert, Box, Divider, LinearProgress, Link, Paper, Typography } from "@mui/material";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAPIObjectState } from "../../hooks/api";
+import { Link as RouterLink } from 'react-router-dom';
+import { UserRecord } from "./types";
+import UserDetailsForm from "./Form";
+import { useCallback } from "react";
 
-type FormState = {
-    loading?: boolean
-    error?: Error
-    data?: UserRecord
-    pristine?: boolean
-}
-
-function resourceIsReady<T>(data: T | Error | undefined): data is T {
-    return !(data === undefined || data instanceof Error);
+function createNewUserRecord(): UserRecord {
+    return {
+        id: '',
+        modelType: 'User',
+        createdAt: 0,
+        createdBy: {
+            rel: 'User',
+            ref: 'self',
+            href: ''
+        },
+        username: '',
+        password: '',
+        group: {
+            rel: 'Group',
+            ref: ''
+        }
+    };
 }
 
 export default function UserDetails() {
+    const navigate = useNavigate();
     const { id } = useParams();
-    const [user, updateUser] = useAPIObjectState<UserRecord>(`/users/${id}`);       
-    const groups = useAPIFetch<GroupReference[]>(`/groups`);
-    const [state, setState] = useState<FormState>({ loading: true, pristine: true });
-    const handleChange = useCallback((event: any): void => {
-        const { value, name } = event.target;
-        switch (name) {
-            case 'group':
-                setState(state => state.data ? ({...state, data: {...state.data, group: { rel: 'Group', ref: value } }, pristine: false}) : state);
-                break;
-            default:
-                setState(state => state.data ? ({...state, data: {...state.data, [name]: value }, pristine: false }) : state);
-                break;
-        }        
-    }, []);
-    const handleCancel = useCallback(() => {
-        if (user && !(user instanceof Error)) {
-            setState(state => ({...state, data: user, pristine: true }));
+    const [user, updateUser] = useAPIObjectState<UserRecord>(id ? `/users/${id}` : undefined, id ? undefined : createNewUserRecord());
+    const handleSubmit = useCallback(async (next: UserRecord) => {
+        try {
+            const result = await updateUser(next);
+            if (!id) {
+                navigate(`/users/${result.id}`);
+            }
+        } catch (e) {
+
         }
-    }, [user]);
-    useEffect(() => {
-        if (resourceIsReady(user) && resourceIsReady(groups)) {
-            setState({ data: user, pristine: true, loading: false });
-        } else if (user instanceof Error) {
-            setState(prev => ({...prev, error: user }));
-        } else if (groups instanceof Error) {
-            setState(prev => ({...prev, error: groups }));
-        }
-    }, [user, groups]);
-    const handleSubmit = useCallback((evt: React.SyntheticEvent<HTMLFormElement>) => {
-        evt.preventDefault();
-        if (state.data) {
-            setState(prev => ({...prev, loading: true }));
-            updateUser(state.data);
-        }        
-    }, [state.data, updateUser]); 
+    }, [updateUser, id, navigate]);
     if (user instanceof Error) {
         return <Alert color="error">{user.message}</Alert>
     }
-    if (groups instanceof Error) {
-        return <Alert color="error">{groups.message}</Alert>
-    }
     return (
-        <form onSubmit={handleSubmit}>            
-            <Grid container gap={2} direction="column">
-                {(user === undefined || groups === undefined || state.data === undefined || state.loading) &&
-                <Grid item>
-                    <LinearProgress />
-                </Grid>}
-                <Grid item>
-                    <FormControl fullWidth>
-                        <TextField label="Username" name="username" value={state.data?.username || ''} onChange={handleChange} disabled={!state.data || state.loading}/>
-                    </FormControl>                    
-                </Grid>
-                <Grid item>
-                    <FormControl fullWidth>
-                        <TextField label="Password" name="password" value={state.data?.password || ''} onChange={handleChange} disabled={!state.data || state.loading}/>
-                    </FormControl>
-                </Grid>
-                <Grid item>
-                    <FormControl fullWidth>
-                        <InputLabel>Group</InputLabel>
-                        <Select name="group" label="Group" value={state.data?.group.ref || ''} onChange={handleChange} disabled={!state.data || state.loading}>
-                            {groups?.map(({ ref }: { ref: string }) => (<MenuItem value={ref} key={ref}>{ref}</MenuItem>))}
-                        </Select>
-                    </FormControl>
-                </Grid>
-                <Grid item>
-                    <Grid container direction="row" justifyContent={"flex-end"}>
-                        <Button type="submit" variant="contained" disabled={!state.data || state.loading || state.pristine}>Save</Button>
-                        <Button variant="text" disabled={!state.data || state.loading || state.pristine} onClick={handleCancel}>Cancel</Button>
-                    </Grid>
-                </Grid>
-            </Grid>
-        </form>
+        <Box padding="1rem">
+            <Typography variant="h6">{id ? 'Edit' : 'Create'} user</Typography>
+            {id && <Typography variant="caption">{id}</Typography>}
+            <Divider sx={{ margin: '0.5rem 0' }} />
+            {user && id &&
+                <>
+                    {user.createdAt &&
+                        <Typography>
+                            Created at {new Date(user.createdAt).toLocaleString()} by {user.createdBy ? <Link component={RouterLink} to={`/users/${user.createdBy.ref}`}>{user.createdBy.ref}</Link> : 'N/A'}
+                        </Typography>
+                    }
+                    {user.updatedAt &&
+                        <Typography>
+                            Updated at {new Date(user.updatedAt).toLocaleString()} by {user.updatedBy ? <Link component={RouterLink} to={`/users/${user.updatedBy.ref}`}>{user.updatedBy.ref}</Link> : 'N/A'}
+                        </Typography>
+                    }
+                </>
+            }
+            <Paper elevation={24} sx={{ padding: '1rem', margin: '1rem 0' }}>
+                {user === undefined && <LinearProgress />}
+                {user && <UserDetailsForm onSubmit={handleSubmit} user={user} />}
+            </Paper>
+        </Box >
     );
 }
