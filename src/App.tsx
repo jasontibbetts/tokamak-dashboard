@@ -1,13 +1,13 @@
-import React, { Suspense, useReducer } from 'react';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { Link as RouterLink, LinkProps as RouterLinkProps } from 'react-router-dom';
+import React, { useReducer, Suspense } from 'react';
+import { createTheme, Theme, ThemeProvider } from '@mui/material/styles';
+import { Link as RouterLink, LinkProps as RouterLinkProps, Outlet } from 'react-router-dom';
 import { AuthTokenContext } from './hooks/auth-token';
 import { DispatchContext } from './hooks/dispatch';
-import reducer, { UserRecord } from './state/reducer';
+import reducer, { ApplicationAction, UserRecord } from './state/reducer';
 import useSession from './hooks/session';
-import Layout from './components/Layout';
-import AppRoutes from './components/AppRoutes';
 import { verify } from 'jsonwebtoken';
+import { Box, CssBaseline } from '@mui/material';
+import AppMenu from './components/AppMenu';
 
 // TODO: Pull this from the api?
 const API_PUBLIC_KEY = `-----BEGIN RSA PUBLIC KEY-----
@@ -24,15 +24,13 @@ TwNpSX//pjEE5e5idYLUagvHYso3r5MhU44brvFootHWYvceQ/xSNJ71tFu29sEe
 QxA6L4Ctrchdl7zQJWNBmO8ByVdd3/+PhjnNE11wgbZPnptYSVt+4+0CAwEAAQ==
 -----END RSA PUBLIC KEY-----`;
 const LinkBehavior = React.forwardRef<
-  any,
-  Omit<RouterLinkProps, 'to'> & { href: RouterLinkProps['to'] }
+    any,
+    Omit<RouterLinkProps, 'to'> & { href: RouterLinkProps['to'] }
 >((props, ref) => {
-  const { href, ...other } = props;
-  // Map href (MUI) -> to (react-router)
-  return <RouterLink ref={ref} to={href} {...other} />;
+    const { href, ...other } = props;
+    // Map href (MUI) -> to (react-router)
+    return <RouterLink ref={ref} to={href} {...other} />;
 });
-
-const LoginScreen = React.lazy(() => import('./screens/Login'));
 
 const theme = createTheme({
     palette: { mode: 'dark' },
@@ -45,7 +43,26 @@ const theme = createTheme({
     },
 });
 
-function App() {    
+interface AppContextsProps {
+    children?: React.ReactElement
+    theme: Theme
+    token?: string
+    dispatch: React.Dispatch<ApplicationAction>
+}
+
+function AppContexts({ children, theme, token, dispatch }: AppContextsProps): JSX.Element {
+    return (
+        <ThemeProvider theme={theme}>
+            <DispatchContext.Provider value={dispatch}>
+                <AuthTokenContext.Provider value={token}>
+                    {children}
+                </AuthTokenContext.Provider>
+            </DispatchContext.Provider>
+        </ThemeProvider>
+    );
+}
+
+function App() {
     const [session] = useSession();
     const [{ token, error }, dispatch] = useReducer(reducer, {}, () => {
         // Initialize the token from the session, ALL other code should use the AuthTokenContext
@@ -54,31 +71,62 @@ function App() {
         if (token) {
             try {
                 user = verify(token, API_PUBLIC_KEY) as UserRecord;
-            } catch(e) {
+            } catch (e) {
                 // The token is NOT valid, so no toke OR user
                 return {};
             }
-        }        
+        }
+        return { token, user };
+    });
+    return (
+        <Box sx={{ display: 'flex', WebkitFontSmoothing: 'antialiased', height: '100vh', width: '100vw' }}>
+            <CssBaseline />
+            <AppContexts token={token} theme={theme} dispatch={dispatch}>
+                <>
+                    <AppMenu />
+                    <Suspense>
+                        <Outlet />
+                    </Suspense>
+                </>
+            </AppContexts>
+        </Box>
+    );
+}
+/*
+function App() {
+    const [session] = useSession();
+    const [{ token, error }, dispatch] = useReducer(reducer, {}, () => {
+        // Initialize the token from the session, ALL other code should use the AuthTokenContext
+        const { token } = session;
+        let user: UserRecord | undefined = undefined;
+        if (token) {
+            try {
+                user = verify(token, API_PUBLIC_KEY) as UserRecord;
+            } catch (e) {
+                // The token is NOT valid, so no toke OR user
+                return {};
+            }
+        }
         return { token, user };
     });
     return (
         <ThemeProvider theme={theme}>
-        <DispatchContext.Provider value={dispatch}>
-        <AuthTokenContext.Provider value={token}>
-            <Layout>
-                <>
-                {token && !error &&
-                    <AppRoutes />
-                }
-                {!token &&
-                    <LoginScreen error={error} />
-                }
-                </>
-            </Layout>
-        </AuthTokenContext.Provider>
-        </DispatchContext.Provider>
+            <DispatchContext.Provider value={dispatch}>
+                <AuthTokenContext.Provider value={token}>
+                    <Layout>
+                        <>
+                            {token && !error &&
+                                <AppRoutes />
+                            }
+                            {!token &&
+                                <LoginScreen error={error} />
+                            }
+                        </>
+                    </Layout>
+                </AuthTokenContext.Provider>
+            </DispatchContext.Provider>
         </ThemeProvider>
-      );
+    );
 }
-
+*/
 export default App;

@@ -1,3 +1,17 @@
+import { Typography } from "@mui/material";
+import { Box } from "@mui/system";
+import { Outlet } from "react-router-dom";
+
+export default function Users() {
+    console.log(`<Users/>`);
+    return (
+        <Box>
+            <Typography variant="h2">Users</Typography>
+            <Outlet />
+        </Box>
+    );
+}
+/*
 import { Alert, Avatar, Card, CardActions, CardHeader, Fab, FormControl, Grid, IconButton, InputLabel, LinearProgress, Link, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
 import { useAPIFetch } from "../../hooks/api";
 import { Link as RouterLink } from 'react-router-dom';
@@ -122,3 +136,4 @@ export default function UsersScreen(): JSX.Element {
         </>
     );
 }
+*/
