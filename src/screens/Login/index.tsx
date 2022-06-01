@@ -3,13 +3,15 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import React, { useCallback, useState } from "react";
 import useDispatch from "../../hooks/dispatch";
 import useSession from "../../hooks/session";
+import { verify } from "jsonwebtoken";
+import { API_PUBLIC_KEY, decryptUserToken } from "../../hooks/auth";
 
-interface SigninState { 
+interface SigninState {
     pending: boolean
     error?: Error
     username: string
     password: string
-    remember: boolean 
+    remember: boolean
 }
 
 export default function LoginScreen({ error: initialError }: { error?: Error }) {
@@ -23,12 +25,12 @@ export default function LoginScreen({ error: initialError }: { error?: Error }) 
             [name]: name === 'remember' ? event.target.checked : event.target.value
         }))
     }, [setState]);
-    const handleSubmit = useCallback((event: React.FormEvent<HTMLFormElement>) => {        
+    const handleSubmit = useCallback((event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (!pending && username && password) {                    
+        if (!pending && username && password) {
             setState((current) => ({ ...current, pending: true, error: undefined }));
-            fetch(`https://localhost:9001/authenticate`, { 
-                method: 'POST', 
+            fetch(`https://localhost:9001/authenticate`, {
+                method: 'POST',
                 body: JSON.stringify({
                     username,
                     password
@@ -38,7 +40,12 @@ export default function LoginScreen({ error: initialError }: { error?: Error }) 
                     resp.json().then(({ token }) => {
                         setSession({ token, username, remember });
                         setState((current) => ({ ...current, pending: false, error: undefined }));
-                        dispatch({ type: 'signin', data: token });
+                        const user = decryptUserToken(token);
+                        if (user) {
+                            dispatch({ type: 'signin', data: { token, user } });
+                        } else {
+                            setState((current) => ({ ...current, pending: false, error: new Error('invalid token in response') }));
+                        }
                     }).catch(error => {
                         setState((current) => ({ ...current, pending: false, error }));
                     });
@@ -52,7 +59,7 @@ export default function LoginScreen({ error: initialError }: { error?: Error }) 
     }, [dispatch, pending, username, password, remember, setSession]);
     return (
         <Paper sx={{ height: '100vh', display: 'flex', flexFlow: 'row nowrap', alignItems: 'center', justifyContent: 'center' }} square>
-            <Container component="main" maxWidth="xs">                
+            <Container component="main" maxWidth="xs">
                 <Box sx={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -109,11 +116,11 @@ export default function LoginScreen({ error: initialError }: { error?: Error }) 
                                 Sign In
                             </Button>
                             {pending && (
-                                <LinearProgress/>
+                                <LinearProgress />
                             )}
                         </Box>
-                    </Box>                
-                </Box>                          
+                    </Box>
+                </Box>
             </Container>
         </Paper>
     );

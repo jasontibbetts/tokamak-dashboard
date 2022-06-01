@@ -83,7 +83,7 @@ export default function AppMenu({ open, items = [] }: AppMenuProps) {
                         </ListItemButton>
                         <Divider />
                         {items.map(({ icon: Icon, to, label }) =>
-                            <ListItemButton component={Link} to={to} sx={{ color: 'color.primary' }}>
+                            <ListItemButton component={Link} to={to} sx={{ color: 'color.primary' }} key={`${label}-${to}`}>
                                 <ListItemIcon>
                                     <Icon />
                                 </ListItemIcon>

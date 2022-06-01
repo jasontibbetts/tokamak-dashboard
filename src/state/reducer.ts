@@ -1,7 +1,11 @@
+import { UserRecord } from "../hooks/auth"
 
 export interface SigninAction {
     type: 'signin'
-    data: string
+    data: {
+        token: string
+        user: UserRecord
+    }
 }
 
 export interface SignoutAction {
@@ -19,54 +23,35 @@ export interface CreateApplication {
     data: undefined
 }
 
-type UserReference = {
-    rel: 'User'
-    ref: string
-    href: string
-    username: string
-}
-type GroupReference = {
-    rel: 'Group',
-    ref: string
-    //href: string
-}
-
-export type UserRecord = {
-    id: string
-    modelType: 'User'
-    username: string
-    group: GroupReference
-    createdAt: number
-    updatedAt?: number
-    createdBy: Omit<UserReference, 'username'>
-    updatedBy?: Omit<UserReference, 'username'>
-}
-
 export type ApplicationAction = SigninAction | SignoutAction | TokenExpired | CreateApplication;
 
 export interface ApplicationState {
     token?: string
-    error?: Error
     user?: UserRecord
+    error?: Error
 }
 
 export default function reducer(state: ApplicationState, action: ApplicationAction): ApplicationState {
     const { type } = action;
-    switch(type) {
+    console.log(`AppReducer::${type}`, action.data);
+    switch (type) {
         case 'signin': {
-            const { data } = action;
+            const { data: { token, user } } = action;
             return {
                 ...state,
-                token: data
+                token,
+                user
             }
         };
         case 'signout': return {
             ...state,
-            token: undefined
+            token: undefined,
+            user: undefined
         };
         case 'token-expired': return {
             ...state,
             token: undefined,
+            user: undefined,
             error: new Error('Session Expired')
         };
         default: return state;
