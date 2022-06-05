@@ -12,7 +12,7 @@ const LinkBehavior = React.forwardRef<
     return <RouterLink ref={ref} to={href} {...other} />;
 });
 const theme = createTheme({
-    palette: { mode: 'dark' },
+    //palette: { mode: 'dark' },
     components: {
         MuiButtonBase: {
             defaultProps: {

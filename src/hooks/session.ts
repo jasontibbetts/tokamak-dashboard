@@ -69,7 +69,7 @@ export function createSession(): Session {
     };
 }
 
-interface SessionData {
+export interface SessionData {
     token?: string
     username?: string
     remember?: boolean

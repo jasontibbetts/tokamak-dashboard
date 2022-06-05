@@ -33,7 +33,7 @@ export interface ApplicationState {
 
 export default function reducer(state: ApplicationState, action: ApplicationAction): ApplicationState {
     const { type } = action;
-    console.log(`AppReducer::${type}`, action.data);
+    console.debug(`AppReducer::${type}`, action.data);
     switch (type) {
         case 'signin': {
             const { data: { token, user } } = action;

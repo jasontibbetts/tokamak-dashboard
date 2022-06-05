@@ -4,6 +4,7 @@ import { createContext, useContext } from 'react';
 export type UserReference = {
     rel: 'User'
     ref: string
+    username?: string
 }
 
 export type GroupReference = {
@@ -20,11 +21,13 @@ export interface UserRecord {
     updatedAt?: number
     updatedBy?: UserReference
     group: GroupReference
+    username: string
 }
 
 export interface Auth {
     user?: UserRecord
     token?: string
+    signout(): void
 }
 
 export const API_PUBLIC_KEY = `-----BEGIN RSA PUBLIC KEY-----
@@ -41,7 +44,7 @@ TwNpSX//pjEE5e5idYLUagvHYso3r5MhU44brvFootHWYvceQ/xSNJ71tFu29sEe
 QxA6L4Ctrchdl7zQJWNBmO8ByVdd3/+PhjnNE11wgbZPnptYSVt+4+0CAwEAAQ==
 -----END RSA PUBLIC KEY-----` as const;
 
-export const AuthContext = createContext<Auth>({});
+export const AuthContext = createContext<Auth>({ signout: () => { } });
 export function decryptUserToken(token: string): UserRecord | undefined {
     try {
         return (verify(token, API_PUBLIC_KEY) as { user: UserRecord }).user;

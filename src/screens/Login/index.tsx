@@ -3,8 +3,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import React, { useCallback, useState } from "react";
 import useDispatch from "../../hooks/dispatch";
 import useSession from "../../hooks/session";
-import { verify } from "jsonwebtoken";
-import { API_PUBLIC_KEY, decryptUserToken } from "../../hooks/auth";
+import { decryptUserToken } from "../../hooks/auth";
 
 interface SigninState {
     pending: boolean
@@ -58,7 +57,7 @@ export default function LoginScreen({ error: initialError }: { error?: Error }) 
         }
     }, [dispatch, pending, username, password, remember, setSession]);
     return (
-        <Paper sx={{ height: '100vh', display: 'flex', flexFlow: 'row nowrap', alignItems: 'center', justifyContent: 'center' }} square>
+        <Paper sx={{ height: '100%', display: 'flex', flexFlow: 'row nowrap', alignItems: 'center', justifyContent: 'center', width: '100%' }} square>
             <Container component="main" maxWidth="xs">
                 <Box sx={{
                     display: 'flex',

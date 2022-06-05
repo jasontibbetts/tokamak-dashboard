@@ -8,14 +8,15 @@ interface AppContextsProps {
     theme: Theme
     token?: string
     user?: UserRecord
-    dispatch: React.Dispatch<ApplicationAction>
+    dispatch: React.Dispatch<ApplicationAction>,
+    signout(): void
 }
 
-export default function AppContexts({ children, theme, token, dispatch, user }: AppContextsProps): JSX.Element {
+export default function AppContexts({ children, theme, token, dispatch, user, signout }: AppContextsProps): JSX.Element {
     return (
         <ThemeProvider theme={theme}>
             <DispatchContext.Provider value={dispatch}>
-                <AuthContext.Provider value={{ token, user }}>
+                <AuthContext.Provider value={{ token, user, signout }}>
                     {children}
                 </AuthContext.Provider>
             </DispatchContext.Provider>
